@@ -14,11 +14,11 @@ kernel = np.array([[0, 0, 3, 2, 2, 2, 3, 0, 0],
 
 filepath = 'pepper.ascii.pgm'
 
-img = cv2.imread('butterfly.jpg', 0)
+image = cv2.imread(filepath,0)
 
-# Logic of convolution between the kernel and the image
+# Convolute the mask with the image. May only work for masks of odd dimensions
+convolvedImage = cv2.filter2D(image,-1,kernel)
 
-
-cv2.imshow('butterfly', img)
+cv2.imshow('image', convolvedImage)
 cv2.waitKey(10000)
-
+cv2.imwrite('answer.ascii.pgm',convolvedImage)
