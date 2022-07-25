@@ -2,6 +2,25 @@ import numpy as np
 import cv2
 from mpi4py import MPI
 
+comm = MPI.COMM_WORLD
+rank = comm.Get_rank()
+
+def convolve(img, kernel):
+    img_w = img.shape[1]
+    img_h = img.shape[0]
+
+    k_size = kernel.shape[0]
+
+    img2_w = img_w - k_size + 1
+    img2_h = img_h - k_size + 1
+    
+    conv = np.zeros((img2_h, img2_w),'float')
+
+    for x in range(img2_h):
+        for y in range(img2_w):
+            conv[x][y] = float(np.sum(np.multiply(kernel,img[x:x+k_size,y:y+k_size])))
+    return conv
+
 kernel = np.array([[0, 0, 3, 2, 2, 2, 3, 0, 0],
                    [0, 2, 3, 5, 5, 5, 3, 2, 0],
                    [3, 3, 5, 3, 0, 3, 5, 3, 3],
@@ -14,11 +33,51 @@ kernel = np.array([[0, 0, 3, 2, 2, 2, 3, 0, 0],
 
 filepath = 'pepper.ascii.pgm'
 
-img = cv2.imread('butterfly.jpg', 0)
+# if rank == 0:
+#     # in real code, this section might
+#     # read in data parameters from a file
+#     numData = 10  
+#     comm.send(numData, dest=1)
 
-# Logic of convolution between the kernel and the image
+#     data = np.linspace(0.0,3.14,numData)  
+#     comm.Send(data, dest=1)
 
+# elif rank == 1:
 
-cv2.imshow('butterfly', img)
+#     numData = comm.recv(source=0)
+#     print('Number of data to receive: ',numData)
+
+#     data = np.empty(numData, dtype='d')  # allocate space to receive the array
+#     comm.Recv(data, source=0)
+
+#     print('data received: ',data)
+
+image = cv2.imread(filepath,0)
+# cv2.imshow('image', image)
+# cv2.waitKey(10000)
+# Convolute the mask with the image. May only work for masks of odd dimensions
+# convolvedImage = cv2.filter2D(image,-1,kernel)
+
+# cv2.imshow('image', convolvedImage)
+# cv2.waitKey(10000)
+# cv2.imwrite('answer.ascii.pgm',convolvedImage)
+
+M = 64
+N = 64
+tiles = [image[x:x+M,y:y+N] 
+        for x in range(0,image.shape[0],M) 
+        for y in range(0,image.shape[1],N)]
+convolvedImage = []
+
+for images in tiles:
+    convolvedImage.append(convolve(images,kernel))
+
+fullImage = []
+for x in range(15):
+    cv2.imshow('image', convolvedImage[x])
+    cv2.waitKey(1000)
+    np.append(fullImage, convolvedImage)
+
+# cv2.imshow('image2', fullImage)
+# cv2.imwrite('answer.ascii.pgm', fullImage)
 cv2.waitKey(10000)
-
