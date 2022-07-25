@@ -1,2 +1,2 @@
 #!/bin/bash
-mpiexec -n 16 --oversubscribe python3 mhm.py
+mpiexec -n 16 --oversubscribe python3 main.py
